@@ -1,4 +1,4 @@
-// CÓDIGO PRINCIPAL DE LA APLICACIÓN - VERSIÓN COMPLETA CORREGIDA
+// CÓDIGO PRINCIPAL DE LA APLICACIÓN - VERSIÓN MODIFICADA
 
 // Datos en memoria (se sincronizarán con Supabase)
 let clients = [];
@@ -94,7 +94,7 @@ function inicializarLoginAdmin() {
             });
         } else {
             console.log('❌ Login fallido');
-            showMessage('Credenciales incorrectas. Usuario: admin, Contraseña: admin123', 'error');
+            showMessage('Credenciales incorrectas. Usuario: admin, Contraseña: villaleon2023', 'error');
         }
     });
 
@@ -461,8 +461,6 @@ async function cargarMetricas() {
     }
 }
 
-// En la función actualizarInterfazMetricas(), reemplaza la sección de métricas-detalle con:
-
 function actualizarInterfazMetricas() {
     const metricasContainer = document.getElementById('metricas-container');
     if (!metricasContainer) {
@@ -488,7 +486,7 @@ function actualizarInterfazMetricas() {
         new Date(metricasData.cobrosPremios[0].fecha_cobro).toLocaleDateString('es-ES') : 
         'N/A';
 
-    // Calcular estadísticas de premios (función inline para evitar el error)
+    // Calcular estadísticas de premios
     const premiosCount = {};
     metricasData.cobrosPremios.forEach(cobro => {
         premiosCount[cobro.premio_nombre] = (premiosCount[cobro.premio_nombre] || 0) + 1;
@@ -543,7 +541,7 @@ function actualizarInterfazMetricas() {
             </div>
         </div>
 
-        <!-- NUEVA SECCIÓN: EXPORTACIÓN DE DATOS MEJORADA -->
+        <!-- SECCIÓN: EXPORTACIÓN DE DATOS MEJORADA -->
         <div class="metrica-section" style="margin-bottom: 25px;">
             <h3>📤 Exportar Datos</h3>
             
@@ -819,16 +817,10 @@ function inicializarBotonesExportacion() {
         generarReporteEstadistico();
     });
 }
-// =============================================
-// FUNCIONES PRINCIPALES (se mantienen igual)
-// =============================================
 
-// [Todas las funciones restantes se mantienen igual que en la versión anterior:
-// showClientInfo, loadClientsTable, mostrarTodosLosClientes, addTableEventListeners,
-// updateClientPoints, resetClientPoints, deleteClient, crearBuscador, searchClients,
-// displaySearchResults, highlightText, actualizarProgresoPremios, cobrarPremioCliente,
-// mostrarDialogoCobro, showMessage]
-// ... (el resto del código se mantiene igual)
+// =============================================
+// FUNCIONES PRINCIPALES
+// =============================================
 
 // Mostrar información del cliente
 function showClientInfo(client) {
@@ -875,7 +867,7 @@ async function loadClientsTable() {
     }
 }
 
-// Función para mostrar todos los clientes
+// Función para mostrar todos los clientes (SIN BOTÓN RESET)
 function mostrarTodosLosClientes() {
     const clientsTable = document.querySelector('#clients-table tbody');
     if (!clientsTable) return;
@@ -911,7 +903,6 @@ function mostrarTodosLosClientes() {
                 <button class="${canjearBtnClass} cobrar-premio" data-id="${client.id}" style="margin-bottom: 5px;" ${!puedeCanjear ? 'disabled' : ''}>
                     ${canjearBtnText}
                 </button>
-                <button class="btn btn-secondary reset-puntos" data-id="${client.id}" style="margin-bottom: 5px;">Reset a 0</button>
                 <button class="btn btn-secondary delete-client" data-id="${client.id}">Eliminar</button>
             </td>
         `;
@@ -922,7 +913,7 @@ function mostrarTodosLosClientes() {
     addTableEventListeners();
 }
 
-// Agregar event listeners a la tabla
+// Agregar event listeners a la tabla (SIN BOTÓN RESET)
 function addTableEventListeners() {
     // Botones de puntos
     document.querySelectorAll('.points-btn').forEach(btn => {
@@ -930,14 +921,6 @@ function addTableEventListeners() {
             const clientId = parseInt(this.getAttribute('data-id'));
             const isAdding = !this.classList.contains('minus');
             updateClientPoints(clientId, isAdding);
-        });
-    });
-    
-    // Botón de reset
-    document.querySelectorAll('.reset-puntos').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const clientId = parseInt(this.getAttribute('data-id'));
-            resetClientPoints(clientId);
         });
     });
     
@@ -986,35 +969,6 @@ async function updateClientPoints(clientId, isAdding) {
     } catch (error) {
         console.error('Error actualizando puntos:', error);
         showMessage('Error actualizando puntos: ' + error.message, 'error');
-    }
-}
-
-// Resetear puntos
-async function resetClientPoints(clientId) {
-    const client = clients.find(c => c.id === clientId);
-    if (!client) return;
-    
-    if (confirm(`¿Estás seguro de resetear los puntos de ${client.name} a 0?`)) {
-        try {
-            const result = await resetearPuntosCliente(clientId);
-            
-            if (result.success) {
-                client.points = 0;
-                
-                if (busquedaActiva && terminoBusqueda) {
-                    searchClients(terminoBusqueda);
-                } else {
-                    mostrarTodosLosClientes();
-                }
-                
-                showMessage(result.message, 'success');
-            } else {
-                throw new Error(result.message);
-            }
-        } catch (error) {
-            console.error('Error reseteando puntos:', error);
-            showMessage('Error reseteando puntos: ' + error.message, 'error');
-        }
     }
 }
 
@@ -1138,7 +1092,6 @@ function displaySearchResults(filteredClients, searchTerm) {
                 <button class="${canjearBtnClass} cobrar-premio" data-id="${client.id}" style="margin-bottom: 5px;" ${!puedeCanjear ? 'disabled' : ''}>
                     ${canjearBtnText}
                 </button>
-                <button class="btn btn-secondary reset-puntos" data-id="${client.id}" style="margin-bottom: 5px;">Reset a 0</button>
                 <button class="btn btn-secondary delete-client" data-id="${client.id}">Eliminar</button>
             </td>
         `;
@@ -1204,7 +1157,7 @@ async function actualizarProgresoPremios() {
 }
 
 // =============================================
-// COBRO DE PREMIOS
+// COBRO DE PREMIOS (CONSERVANDO PUNTOS SOBRANTES)
 // =============================================
 
 async function cobrarPremioCliente(clientId) {
@@ -1221,12 +1174,14 @@ async function cobrarPremioCliente(clientId) {
     let selectorHTML = `<p>Selecciona el premio a canjear para <strong>${client.name}</strong> (${client.points} puntos disponibles):</p>`;
     
     premiosDisponibles.forEach((premio, index) => {
+        const puntosRestantes = client.points - premio.puntosRequeridos;
         selectorHTML += `
             <div style="margin: 10px 0; padding: 10px; border: 1px solid var(--color-gris); border-radius: 5px;">
                 <input type="radio" id="premio-${index}" name="premioSeleccionado" value="${premio.id}" ${index === 0 ? 'checked' : ''}>
                 <label for="premio-${index}" style="margin-left: 10px;">
                     <strong>${premio.nombre}</strong> - ${premio.puntosRequeridos} puntos
                     ${premio.descripcion ? `<br><small>${premio.descripcion}</small>` : ''}
+                    <br><small style="color: #4CAF50; font-weight: bold;">Puntos restantes después del canje: ${puntosRestantes}</small>
                 </label>
             </div>
         `;
@@ -1237,17 +1192,18 @@ async function cobrarPremioCliente(clientId) {
     if (!premioSeleccionado) return;
     
     const premio = premiosConfig.find(p => p.id == premioSeleccionado);
-    
-    if (confirm(`¿Confirmar canje de premio "${premio.nombre}" por ${premio.puntosRequeridos} puntos para ${client.name}?`)) {
+    const nuevosPuntos = client.points - premio.puntosRequeridos;
+
+    if (confirm(`¿Confirmar canje de premio "${premio.nombre}" por ${premio.puntosRequeridos} puntos para ${client.name}?\n\nPuntos actuales: ${client.points}\nPuntos después del canje: ${nuevosPuntos}`)) {
         try {
             // Registrar el cobro
-            await registrarCobroPremio(client.id, client.name, premio.id, premio.nombre, premio.puntosRequeridos, client.points);
+            await registrarCobroPremio(client.id, client.name, premio.id, premio.nombre, premio.puntosRequeridos, nuevosPuntos);
             
-            // Resetear puntos
-            const result = await resetearPuntosCliente(clientId);
+            // Actualizar puntos (restar solo los puntos del premio canjeado)
+            const result = await updateClientPointsInDB(clientId, nuevosPuntos);
             
             if (result.success) {
-                client.points = 0;
+                client.points = nuevosPuntos;
                 
                 if (busquedaActiva && terminoBusqueda) {
                     searchClients(terminoBusqueda);
@@ -1255,7 +1211,7 @@ async function cobrarPremioCliente(clientId) {
                     mostrarTodosLosClientes();
                 }
                 
-                showMessage(`¡Premio "${premio.nombre}" canjeado exitosamente para ${client.name}! Puntos reseteados a 0.`, 'success');
+                showMessage(`¡Premio "${premio.nombre}" canjeado exitosamente para ${client.name}! Se descontaron ${premio.puntosRequeridos} puntos. Puntos restantes: ${nuevosPuntos}`, 'success');
             } else {
                 throw new Error(result.message);
             }
@@ -1340,8 +1296,10 @@ function showMessage(text, type) {
         }
     }, 5000);
 }
+
 // Función auxiliar para formatear fechas en nombres de archivo
 function formatearFechaArchivo(fecha) {
     return fecha.toISOString().split('T')[0].replace(/-/g, '');
 }
+
 console.log('🚀 Aplicación VillaLeon cargada');
